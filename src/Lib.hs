@@ -1,6 +1,3 @@
-module Lib
-    ( someFunc
-    ) where
+module Lib (Command) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+type Command = String
