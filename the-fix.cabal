@@ -1,4 +1,4 @@
-cabal-version: 2.2
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.37.0.
 --
@@ -7,12 +7,12 @@ cabal-version: 2.2
 name:           the-fix
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/elisabethstenholm/the-fix#readme>
-homepage:       https://github.com/githubuser/the-fix#readme
-bug-reports:    https://github.com/githubuser/the-fix/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2024 Author name here
-license:        BSD-3-Clause
+homepage:       https://github.com/elisabethstenholm/the-fix#readme
+bug-reports:    https://github.com/elisabethstenholm/the-fix/issues
+author:         Elisabeth Stenholm
+maintainer:     elisabeth@stenholm.one
+copyright:      2024 Elisabeth Stenholm
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -21,35 +21,37 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/the-fix
+  location: https://github.com/elisabethstenholm/the-fix
 
 library
   exposed-modules:
       Lib
   other-modules:
       Paths_the_fix
-  autogen-modules:
-      Paths_the_fix
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson >=2.1.2.1
+    , base >=4.7 && <5
     , optparse-applicative >=0.18.1.0
+    , req >=3.13.2
+    , text >=2.0.2
   default-language: Haskell2010
 
 executable the-fix-exe
   main-is: Main.hs
   other-modules:
       Paths_the_fix
-  autogen-modules:
-      Paths_the_fix
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson >=2.1.2.1
+    , base >=4.7 && <5
     , optparse-applicative >=0.18.1.0
+    , req >=3.13.2
+    , text >=2.0.2
     , the-fix
   default-language: Haskell2010
 
@@ -58,13 +60,14 @@ test-suite the-fix-test
   main-is: Spec.hs
   other-modules:
       Paths_the_fix
-  autogen-modules:
-      Paths_the_fix
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson >=2.1.2.1
+    , base >=4.7 && <5
     , optparse-applicative >=0.18.1.0
+    , req >=3.13.2
+    , text >=2.0.2
     , the-fix
   default-language: Haskell2010
