@@ -2,13 +2,19 @@
 
 -- | This module constructs the API request and interprets the response
 
-module Request (Command, requestBody, request) where
+module Request (
+  Command,
+  requestBody,
+  request,
+  suggestions
+  ) where
 
 import GHC.Generics
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.ByteString (ByteString)
 import Data.Aeson
+import Data.Aeson.Types
 import Network.HTTP.Req
 
 -- | A console command
@@ -87,3 +93,10 @@ request body apikey =
     (ReqBodyJson body)
     jsonResponse
     (oAuth2Bearer apikey)
+
+-- | Retrieve command suggestions from response
+suggestions :: Object -> Either String [Text]
+suggestions = parseEither $ \obj -> do
+  choices <- parseField obj "choices"
+  messages <- traverse (flip parseField "message") choices
+  traverse (flip parseField "content") messages

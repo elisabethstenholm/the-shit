@@ -12,7 +12,7 @@ main :: IO ()
 main = do
   (command, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
   response <- runReq defaultHttpConfig $ request (requestBody command) apikey
-  print (responseBody response :: Value)
+  print $ suggestions (responseBody response)
 
 -- | Parse a command
 parseCommand :: Parser Command
