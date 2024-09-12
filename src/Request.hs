@@ -1,10 +1,13 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings #-}
 
-module Lib (Command, requestBody) where
+-- | This module constructs the API request and interprets the response
+
+module Request (Command, requestBody, request) where
 
 import GHC.Generics
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.ByteString (ByteString)
 import Data.Aeson
 import Network.HTTP.Req
 
@@ -14,7 +17,7 @@ type Command = Text
 -- | Role used in API request
 data Role = 
   System -- ^To set the behavior of the model
-  | User -- ^Message for model to respond to
+  | User -- ^Message for the model to respond to
   deriving (Eq, Ord, Show)
 
 instance ToJSON Role where
@@ -53,7 +56,7 @@ data Body =
 instance ToJSON Body where
   toEncoding = genericToEncoding defaultOptions
 
--- | Messages to model, given a command to be corrected
+-- | Messages to model, containing the command to be corrected
 requestMessages :: Command -> [Message]
 requestMessages command =
   [
@@ -64,11 +67,23 @@ requestMessages command =
           [
             "Correct the following terminal command: `",
             command,
-            "`."
+            "`. Give me nothing but the command as plain text."
           ]
       }
   ]
 
+-- | Body of request to model
 requestBody :: Command -> Body
 requestBody =
   Body FourO . requestMessages
+
+-- | API request
+request :: (MonadHttp m, ToJSON a, FromJSON b) 
+        => a -> ByteString -> m (JsonResponse b)
+request body apikey =
+  req
+    POST
+    (https "api.openai.com" /: "v1" /: "chat" /: "completions")
+    (ReqBodyJson body)
+    jsonResponse
+    (oAuth2Bearer apikey)

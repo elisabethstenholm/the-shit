@@ -1,13 +1,18 @@
 module Main (main) where
 
-import Lib
-import Data.Aeson
+import Request
 import Options.Applicative
+import Control.Monad.IO.Class
+import Data.ByteString (ByteString)
+import Data.ByteString.Char8 as B
+import Data.Aeson
+import Network.HTTP.Req hiding (header)
 
 main :: IO ()
 main = do
   (command, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
-  print $ encode $ requestBody command
+  response <- runReq defaultHttpConfig $ request (requestBody command) apikey
+  print (responseBody response :: Value)
 
 -- | Parse a command
 parseCommand :: Parser Command
@@ -17,19 +22,20 @@ parseCommand =
     <> help "The command to be corrected")
 
 -- | Parse an OpenAI api key (only for development)
-parseAPIKey :: Parser String
+parseAPIKey :: Parser ByteString
 parseAPIKey =
-  strArgument
-    (metavar "API_KEY"
-    <> help "OpenAI api key (temporary)")
+  B.pack <$>
+    strArgument
+      (metavar "API_KEY"
+      <> help "OpenAI api key (temporary)")
 
 -- | Parse a command and an OpenAI api key (only for development)
-parseCommandAndAPIKey :: Parser (Command, String)
+parseCommandAndAPIKey :: Parser (Command, ByteString)
 parseCommandAndAPIKey =
   liftA2 (,) parseCommand parseAPIKey
 
 -- | Description of the program, with options
-opts :: ParserInfo (Command , String)
+opts :: ParserInfo (Command , ByteString)
 opts =
   info
     (parseCommandAndAPIKey <**> helper) -- ^Change to only parse command (development)
