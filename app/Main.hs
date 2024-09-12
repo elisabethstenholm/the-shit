@@ -5,13 +5,14 @@ import Options.Applicative
 import Control.Monad.IO.Class
 import Data.ByteString (ByteString)
 import Data.ByteString.Char8 as B
+import qualified Data.Text as Text
 import Data.Aeson
 import Network.HTTP.Req hiding (header)
 
 main :: IO ()
 main = do
-  (command, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
-  response <- runReq defaultHttpConfig $ request (requestBody command) apikey
+  (command, prevOutput, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
+  response <- runReq defaultHttpConfig $ request (requestBody command (Text.pack prevOutput)) (B.pack apikey)
   print $ suggestions (responseBody response)
 
 -- | Parse a command
@@ -21,24 +22,32 @@ parseCommand =
     (metavar "COMMAND" 
     <> help "The command to be corrected")
 
+-- | Parse output from previous command
+parseOutput :: Parser String
+parseOutput =
+  strArgument
+    (metavar "PREV_OUTPUT"
+    <> help "Output from previous command"
+    <> showDefault
+    <> value "")
+
 -- | Parse an OpenAI api key (only for development)
-parseAPIKey :: Parser ByteString
+parseAPIKey :: Parser String
 parseAPIKey =
-  B.pack <$>
-    strArgument
-      (metavar "API_KEY"
-      <> help "OpenAI api key (temporary)")
+  strArgument
+    (metavar "API_KEY"
+    <> help "OpenAI api key (temporary)")
 
 -- | Parse a command and an OpenAI api key (only for development)
-parseCommandAndAPIKey :: Parser (Command, ByteString)
-parseCommandAndAPIKey =
-  liftA2 (,) parseCommand parseAPIKey
+parseAll :: Parser (Command, String, String)
+parseAll =
+  liftA3 (,,) parseCommand parseOutput parseAPIKey
 
 -- | Description of the program, with options
-opts :: ParserInfo (Command , ByteString)
+opts :: ParserInfo (Command, String, String)
 opts =
   info
-    (parseCommandAndAPIKey <**> helper) -- ^Change to only parse command (development)
+    (parseAll <**> helper) -- ^Change to only parse command (development)
     (fullDesc 
     <> progDesc "The Fix is a command line program which corrects the previous command." 
     <> header "The Fix - correct console commands")

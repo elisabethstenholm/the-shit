@@ -63,8 +63,8 @@ instance ToJSON Body where
   toEncoding = genericToEncoding defaultOptions
 
 -- | Messages to model, containing the command to be corrected
-requestMessages :: Command -> [Message]
-requestMessages command =
+requestMessages :: Command -> Text -> [Message]
+requestMessages command prevOutput =
   [
     Message {
       role = User,
@@ -73,15 +73,17 @@ requestMessages command =
           [
             "Correct the following terminal command: `",
             command,
-            "`. Give me nothing but the command as plain text."
+            "`. The output of the command was:\n\n```",
+            prevOutput,
+            "```\n\n",
+            "Give me nothing but the command as plain text."
           ]
       }
   ]
 
 -- | Body of request to model
-requestBody :: Command -> Body
-requestBody =
-  Body FourO . requestMessages
+requestBody :: Command -> Text -> Body
+requestBody = (Body FourO .) . requestMessages
 
 -- | API request
 request :: (MonadHttp m, ToJSON a, FromJSON b) 
