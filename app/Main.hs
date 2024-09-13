@@ -4,7 +4,7 @@ import Request
 import Options.Applicative
 import Control.Monad.IO.Class
 import Data.ByteString (ByteString)
-import Data.ByteString.Char8 as B
+import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Text as Text
 import Data.Aeson
 import Network.HTTP.Req hiding (header)
@@ -12,7 +12,7 @@ import Network.HTTP.Req hiding (header)
 main :: IO ()
 main = do
   (command, prevOutput, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
-  response <- runReq defaultHttpConfig $ request (requestBody command (Text.pack prevOutput)) (B.pack apikey)
+  response <- runReq defaultHttpConfig $ request (requestBody command (Text.pack prevOutput)) (ByteString.pack apikey)
   print $ suggestions (responseBody response)
 
 -- | Parse a command

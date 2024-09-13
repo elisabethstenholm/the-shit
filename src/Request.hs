@@ -76,7 +76,7 @@ requestMessages command prevOutput =
             "`. The output of the command was:\n\n```",
             prevOutput,
             "```\n\n",
-            "Give me nothing but the command as plain text."
+            "Give me nothing but the command as text, not as a code block."
           ]
       }
   ]
