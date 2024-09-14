@@ -33,6 +33,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson >=2.1.2.1
+    , ansi-terminal >=1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , optparse-applicative >=0.18.1.0
@@ -49,6 +50,7 @@ executable the-fix-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson >=2.1.2.1
+    , ansi-terminal >=1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , optparse-applicative >=0.18.1.0
@@ -67,6 +69,7 @@ test-suite the-fix-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson >=2.1.2.1
+    , ansi-terminal >=1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , optparse-applicative >=0.18.1.0

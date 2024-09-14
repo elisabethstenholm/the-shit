@@ -8,12 +8,37 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.Text as Text
 import Data.Aeson
 import Network.HTTP.Req hiding (header)
+import System.Console.ANSI
+import System.IO
 
 main :: IO ()
 main = do
   (command, prevOutput, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
   response <- runReq defaultHttpConfig $ request (requestBody command (Text.pack prevOutput)) (ByteString.pack apikey)
-  print $ suggestions (responseBody response)
+  case suggestions (responseBody response) of
+    Left s -> print s
+    Right ss -> tui $ read $ show $ head ss
+
+tui :: String -> IO ()
+tui suggestion = do
+  hSetEcho stdin False
+  stdoutSupportsANSI <- hNowSupportsANSI stdout
+  if stdoutSupportsANSI
+    then do
+      putStr $ suggestion ++ " ["
+      setSGR [SetColor Foreground Dull Green]
+      putStr "Enter"
+      setSGR [Reset]
+      putStr "/"
+      setSGR [SetColor Foreground Dull Red]
+      putStr "Ctrl+C"
+      setSGR [Reset]
+      putStr "]"
+    else
+      putStr $ suggestion ++ " [Ctrl+C/Enter]"
+  hFlush stdout
+  _ <- getLine
+  return ()
 
 -- | Parse a command
 parseCommand :: Parser Command
