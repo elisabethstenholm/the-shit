@@ -102,5 +102,4 @@ request body apikey =
 -- | Retrieve command suggestions from response
 suggestions :: Value -> [String]
 suggestions =
-  fmap (read . show) 
-  . toListOf (key "choices" . _Array . each . key "message" . key "content" . _String)
+  toListOf (key "choices" . _Array . each . key "message" . key "content" . _String . unpacked)
