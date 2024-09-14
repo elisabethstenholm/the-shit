@@ -27,6 +27,10 @@ dependencies:
 - text >= 2.0.2
 - bytestring >= 0.11.5.3
 - ansi-terminal >= 1.0.2
+- microlens-platform >= 0.4.3.5
+- microlens-aeson >= 2.5.2
+- vector >= 0.13.1.0
+- Cabal >= 3.10.3.0
 
 ghc-options:
 - -Wall

@@ -10,17 +10,20 @@ import Data.Aeson
 import Network.HTTP.Req hiding (header)
 import System.Console.ANSI
 import System.IO
+import Distribution.Simple.Utils hiding (info)
 
 main :: IO ()
 main = do
   (command, prevOutput, apikey) <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
   response <- runReq defaultHttpConfig $ request (requestBody command (Text.pack prevOutput)) (ByteString.pack apikey)
-  case suggestions (responseBody response) of
-    Left s -> print s
-    Right ss -> tui $ read $ show $ head ss
+  case safeHead $ suggestions (responseBody response) of
+    Nothing -> putStrLn "No suggestions."
+    Just suggestion -> simpleTui suggestion
 
-tui :: String -> IO ()
-tui suggestion = do
+-- | Print suggested command and keys for accepting or rejecting the suggestion
+--   Only for single suggestion
+simpleTui :: String -> IO ()
+simpleTui suggestion = do
   hSetEcho stdin False
   stdoutSupportsANSI <- hNowSupportsANSI stdout
   if stdoutSupportsANSI

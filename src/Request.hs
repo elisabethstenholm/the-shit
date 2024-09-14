@@ -15,7 +15,10 @@ import qualified Data.Text as Text
 import Data.ByteString (ByteString)
 import Data.Aeson
 import Data.Aeson.Types
+import Data.Vector
 import Network.HTTP.Req
+import Lens.Micro.Platform
+import Lens.Micro.Aeson
 
 -- | A console command
 type Command = Text
@@ -97,8 +100,7 @@ request body apikey =
     (oAuth2Bearer apikey)
 
 -- | Retrieve command suggestions from response
-suggestions :: Object -> Either String [Text]
-suggestions = parseEither $ \obj -> do
-  choices <- parseField obj "choices"
-  messages <- traverse (flip parseField "message") choices
-  traverse (flip parseField "content") messages
+suggestions :: Value -> [String]
+suggestions =
+  fmap (read . show) 
+  . toListOf (key "choices" . _Array . each . key "message" . key "content" . _String)
