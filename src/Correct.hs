@@ -30,33 +30,29 @@ correct cmd apiKeyVarName = do
         Nothing -> putStrLn "No suggestions."
         Just suggestion -> do
           catch (simpleTui suggestion) handleUserInterrupt
-          maybeTmp <- lookupEnv "TF_TMP"
-          case maybeTmp of
-            Nothing ->
-              putStrLn "Error: No temporary file to store corrected command in."
-            Just tmp -> writeFile tmp suggestion
+          putStr suggestion
 
 -- | Print suggested command and keys for accepting or rejecting the suggestion
 --   Only for single suggestion
 simpleTui :: String -> IO ()
 simpleTui suggestion = do
   hSetEcho stdin False
-  stdoutSupportsANSI <- hNowSupportsANSI stdout
-  if stdoutSupportsANSI
+  stderrSupportsANSI <- hNowSupportsANSI stderr
+  if stderrSupportsANSI
     then do
-      putStr $ suggestion ++ " ["
-      setSGR [SetColor Foreground Vivid Green]
-      putStr "Enter"
-      setSGR [Reset]
-      putStr "/"
-      setSGR [SetColor Foreground Vivid Red]
-      putStr "Ctrl+C"
-      setSGR [Reset]
-      putStr "]"
-    else putStr $ suggestion ++ " [Ctrl+C/Enter]"
-  hFlush stdout
+      hPutStr stderr $ suggestion ++ " ["
+      hSetSGR stderr [SetColor Foreground Vivid Green]
+      hPutStr stderr "Enter"
+      hSetSGR stderr [Reset]
+      hPutStr stderr "/"
+      hSetSGR stderr [SetColor Foreground Vivid Red]
+      hPutStr stderr "Ctrl+C"
+      hSetSGR stderr [Reset]
+      hPutStr stderr "]"
+    else hPutStr stderr $ suggestion ++ " [Ctrl+C/Enter]"
+  hFlush stderr
   _ <- getLine
-  putStr "\n"
+  hPutStr stderr "\n"
   hSetEcho stdin True
 
 -- | Exit program on UserInterrupt
