@@ -29,8 +29,7 @@ dependencies:
 - ansi-terminal >= 1.0.2
 - microlens-platform >= 0.4.3.5
 - microlens-aeson >= 2.5.2
-- vector >= 0.13.1.0
-- Cabal >= 3.10.3.0
+- process >= 1.6.19.0
 
 ghc-options:
 - -Wall
