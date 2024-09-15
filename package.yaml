@@ -46,7 +46,7 @@ library:
   source-dirs: src
 
 executables:
-  the-fix-exe:
+  the-fix:
     main:                Main.hs
     source-dirs:         app
     ghc-options:

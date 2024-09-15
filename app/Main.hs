@@ -2,93 +2,55 @@ module Main
   ( main
   ) where
 
-import           Control.Exception
-import           Control.Monad
-import qualified Data.ByteString.Char8 as ByteString
-import           Data.Maybe
-import           Data.Text             (Text)
-import           Network.HTTP.Req      hiding (header)
-import           Options.Applicative   hiding (command)
-import           Request
-import           System.Console.ANSI
-import           System.Environment
-import           System.Exit
-import           System.IO
-import           System.Process
+import           Alias
+import           Correct
+
+import           Data.Text           (Text)
+import           Options.Applicative
 
 main :: IO ()
 main = do
-  args <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
-  let varName = apiKeyVarName args
-  maybeApiKey <- lookupEnv $ varName
-  case maybeApiKey of
-    Nothing -> putStrLn $ "Error: No environment variable " ++ varName ++ "."
-    Just apiKey -> do
-      response <-
-        runReq defaultHttpConfig $
-        request (requestBody (command args)) (ByteString.pack apiKey)
-      case listToMaybe $ suggestions (responseBody response) of
-        Nothing -> putStrLn "No suggestions."
-        Just suggestion -> do
-          catch (simpleTui suggestion) handleUserInterrupt
-          _ <- try (callCommand suggestion) :: IO (Either IOError ())
-          return ()
+  mode <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
+  case mode of
+    CorrectMode cmd apiKeyVarName     -> correct cmd apiKeyVarName
+    AliasMode apiKeyVarName aliasName -> alias apiKeyVarName aliasName
 
--- | Print suggested command and keys for accepting or rejecting the suggestion
---   Only for single suggestion
-simpleTui :: String -> IO ()
-simpleTui suggestion = do
-  hSetEcho stdin False
-  stdoutSupportsANSI <- hNowSupportsANSI stdout
-  if stdoutSupportsANSI
-    then do
-      putStr $ suggestion ++ " ["
-      setSGR [SetColor Foreground Vivid Green]
-      putStr "Enter"
-      setSGR [Reset]
-      putStr "/"
-      setSGR [SetColor Foreground Vivid Red]
-      putStr "Ctrl+C"
-      setSGR [Reset]
-      putStr "]"
-    else putStr $ suggestion ++ " [Ctrl+C/Enter]"
-  hFlush stdout
-  _ <- getLine
-  putStr "\n"
-  hSetEcho stdin True
+-- | Program mode
+data Mode
+  = CorrectMode Text String -- ^Correct console command. Arguments: command, api key variable
+  | AliasMode String String -- ^Construct alias. Arguments: api key variable, alias
+  deriving (Eq, Ord, Show)
 
-handleUserInterrupt :: AsyncException -> IO ()
-handleUserInterrupt UserInterrupt = do
-  stdoutSupportsANSI <- hNowSupportsANSI stdout
-  when stdoutSupportsANSI (setSGR [SetColor Foreground Vivid Red])
-  putStrLn "\nAborted."
-  exitSuccess
-handleUserInterrupt e = throwIO e
+parseCorrectMode :: Mod CommandFields Mode
+parseCorrectMode =
+  command
+    "correct"
+    (info ((CorrectMode <$> parseCommand <*> parseApiKey) <**> helper) mempty)
 
--- | All arguments to the program
-data Arguments =
-  Arguments
-    { command       :: Text -- ^The command to be corrected
-    , apiKeyVarName :: String -- ^Name of environment variable containing OpenAI api key
-    }
+parseAliasMode :: Mod CommandFields Mode
+parseAliasMode =
+  command
+    "alias"
+    (info ((AliasMode <$> parseApiKey <*> parseAliasName) <**> helper) mempty)
 
--- | Parse arguments to the program
-parseArguments :: Parser Arguments
-parseArguments =
-  Arguments <$>
-  strArgument (metavar "COMMAND" <> help "The command to be corrected") <*>
+parseCommand :: Parser Text
+parseCommand =
+  strArgument (metavar "COMMAND" <> help "The command to be corrected")
+
+parseApiKey :: Parser String
+parseApiKey =
   strOption
     (long "var-name" <>
      short 'n' <>
      help "Name of environment variable containing OpenAI api key" <>
      showDefault <> value "OPENAI_API_KEY" <> metavar "NAME")
 
--- | Description of the program, with options
-opts :: ParserInfo Arguments
-opts =
-  info
-    (parseArguments <**> helper)
-    (fullDesc <>
-     progDesc
-       "The Fix is a command line program which corrects the previous command." <>
-     header "The Fix - correct console commands")
+parseAliasName :: Parser String
+parseAliasName =
+  strOption
+    (long "alias-name" <>
+     short 'a' <>
+     help "Alias name" <> showDefault <> value "fix" <> metavar "ALIAS")
+
+opts :: ParserInfo Mode
+opts = info (subparser (parseCorrectMode <> parseAliasMode) <**> helper) mempty
