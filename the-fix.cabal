@@ -36,6 +36,7 @@ library
   build-depends:
       aeson >=2.1.2.1
     , ansi-terminal >=1.0.2
+    , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , microlens-aeson >=2.5.2
@@ -56,6 +57,7 @@ executable the-fix
   build-depends:
       aeson >=2.1.2.1
     , ansi-terminal >=1.0.2
+    , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , microlens-aeson >=2.5.2
@@ -78,6 +80,7 @@ test-suite the-fix-test
   build-depends:
       aeson >=2.1.2.1
     , ansi-terminal >=1.0.2
+    , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , microlens-aeson >=2.5.2

@@ -6,6 +6,8 @@ module Correct
 
 import           Request
 
+import           Control.Applicative
+import           Control.Applicative.Logic
 import           Control.Exception
 import           Control.Monad
 import qualified Data.ByteString.Char8 as ByteString
@@ -19,18 +21,13 @@ import           System.IO
 correct :: Text -> String -> IO ()
 correct cmd apiKeyVarName = do
   maybeApiKey <- lookupEnv apiKeyVarName
-  case maybeApiKey of
-    Nothing ->
-      putStrLn $ "Error: No environment variable " ++ apiKeyVarName ++ "."
-    Just apiKey -> do
-      response <-
-        runReq defaultHttpConfig $
-        request (requestBody cmd) (ByteString.pack apiKey)
-      case listToMaybe $ suggestions (responseBody response) of
-        Nothing -> putStrLn "No suggestions."
-        Just suggestion -> do
-          catch (simpleTui suggestion) handleUserInterrupt
-          putStr suggestion
+  apiKey <- convert maybeApiKey <|> fail ("No environment variable " ++ apiKeyVarName ++ ".")
+  response <-
+    runReq defaultHttpConfig $
+    request (requestBody cmd) (ByteString.pack apiKey)
+  suggestion <- convert (suggestions (responseBody response)) <|> fail "No suggestions."
+  catch (simpleTui suggestion) handleUserInterrupt
+  putStr suggestion
 
 -- | Print suggested command and keys for accepting or rejecting the suggestion
 --   Only for single suggestion

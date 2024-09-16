@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: applicative-logic-0.1.0.2@sha256:76b322c71dd51da01da4274659ea91da9259a2f5b4c832475cbfd1ab023e0be6,909
+    pantry-tree:
+      sha256: 75afc9932444173b1144cbe3de0100328d3993380aaaf06955a1e9ea4da69e88
+      size: 239
+  original:
+    hackage: applicative-logic-0.1.0.2
 snapshots:
 - completed:
     sha256: edbd50d7e7c85c13ad5f5835ae2db92fab1e9cf05ecf85340e2622ec0a303df1
