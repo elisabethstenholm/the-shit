@@ -1,4 +1,4 @@
-# Changelog for `the-fix`
+# Changelog for `the-shit`
 
 All notable changes to this project will be documented in this file.
 

@@ -49,7 +49,7 @@ parseAliasName =
   strOption
     (long "alias-name" <>
      short 'a' <>
-     help "Alias name" <> showDefault <> value "fix" <> metavar "ALIAS")
+     help "Alias name" <> showDefault <> value "shit" <> metavar "ALIAS")
 
 opts :: ParserInfo Mode
 opts = info (subparser (parseCorrectMode <> parseAliasMode) <**> helper) mempty

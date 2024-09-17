@@ -28,8 +28,10 @@ requestBody :: String -> Value
 requestBody command =
   object
     [ "model" .= ("gpt-4o" :: String)
-    , "messages" .= 
-        [ object [ "role" .= ("user" :: String), "content" .= requestContent command]]
+    , "messages" .=
+      [ object
+          ["role" .= ("user" :: String), "content" .= requestContent command]
+      ]
     , "temperature" .= (1 :: Double)
     ]
 
@@ -46,8 +48,8 @@ request command apikey =
 -- | Retrieve command suggestions from response
 suggestions :: Value -> [String]
 suggestions =
-  concat
-  . (read <$>)
-  . toListOf
+  concat .
+  (read <$>) .
+  toListOf
     (key "choices" .
      _Array . each . key "message" . key "content" . _String . unpacked)

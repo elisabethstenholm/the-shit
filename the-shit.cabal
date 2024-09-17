@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           the-fix
+name:           the-shit
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/elisabethstenholm/the-fix#readme>
-homepage:       https://github.com/elisabethstenholm/the-fix#readme
-bug-reports:    https://github.com/elisabethstenholm/the-fix/issues
+description:    Please see the README on GitHub at <https://github.com/elisabethstenholm/the-shit#readme>
+homepage:       https://github.com/elisabethstenholm/the-shit#readme
+bug-reports:    https://github.com/elisabethstenholm/the-shit/issues
 author:         Elisabeth Stenholm
 maintainer:     elisabeth@stenholm.one
 copyright:      2024 Elisabeth Stenholm
@@ -21,7 +21,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/elisabethstenholm/the-fix
+  location: https://github.com/elisabethstenholm/the-shit
 
 library
   exposed-modules:
@@ -30,7 +30,7 @@ library
       Request
       TUI
   other-modules:
-      Paths_the_fix
+      Paths_the_shit
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
@@ -50,10 +50,10 @@ library
     , text-format >=0.3.2.1
   default-language: Haskell2010
 
-executable the-fix
+executable the-shit
   main-is: Main.hs
   other-modules:
-      Paths_the_fix
+      Paths_the_shit
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
@@ -71,14 +71,14 @@ executable the-fix
     , terminfo >=0.4.1.6
     , text >=2.0.2
     , text-format >=0.3.2.1
-    , the-fix
+    , the-shit
   default-language: Haskell2010
 
-test-suite the-fix-test
+test-suite the-shit-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_the_fix
+      Paths_the_shit
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
@@ -96,5 +96,5 @@ test-suite the-fix-test
     , terminfo >=0.4.1.6
     , text >=2.0.2
     , text-format >=0.3.2.1
-    , the-fix
+    , the-shit
   default-language: Haskell2010
