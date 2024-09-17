@@ -5,7 +5,6 @@ module Main
 import           Alias
 import           Correct
 
-import           Data.Text           (Text)
 import           Options.Applicative
 
 main :: IO ()
@@ -17,7 +16,7 @@ main = do
 
 -- | Program mode
 data Mode
-  = CorrectMode Text String -- ^Correct console command. Arguments: command, api key variable
+  = CorrectMode String String -- ^Correct console command. Arguments: command, api key variable
   | AliasMode String String -- ^Construct alias. Arguments: api key variable, alias
   deriving (Eq, Ord, Show)
 
@@ -33,7 +32,7 @@ parseAliasMode =
     "alias"
     (info ((AliasMode <$> parseApiKey <*> parseAliasName) <**> helper) mempty)
 
-parseCommand :: Parser Text
+parseCommand :: Parser String
 parseCommand =
   strArgument (metavar "COMMAND" <> help "The command to be corrected")
 

@@ -5,58 +5,46 @@ module Correct
   ) where
 
 import           Request
+import           TUI
 
 import           Control.Applicative
 import           Control.Applicative.Logic
 import           Control.Exception
 import           Control.Monad
 import qualified Data.ByteString.Char8 as ByteString
-import           Data.Maybe
-import           Data.Text             (Text)
 import           Network.HTTP.Req      hiding (header)
 import           System.Console.ANSI
+import           System.Console.Terminfo hiding (Red, Green)
 import           System.Environment
 import           System.IO
 
-correct :: Text -> String -> IO ()
+correct :: String -> String -> IO ()
 correct cmd apiKeyVarName = do
+  -- Make request
   maybeApiKey <- lookupEnv apiKeyVarName
   apiKey <- convert maybeApiKey <|> fail ("No environment variable " ++ apiKeyVarName ++ ".")
   response <-
     runReq defaultHttpConfig $
-    request (requestBody cmd) (ByteString.pack apiKey)
-  suggestion <- convert (suggestions (responseBody response)) <|> fail "No suggestions."
-  catch (simpleTui suggestion) handleUserInterrupt
-  putStr suggestion
-
--- | Print suggested command and keys for accepting or rejecting the suggestion
---   Only for single suggestion
-simpleTui :: String -> IO ()
-simpleTui suggestion = do
-  hSetEcho stdin False
-  stderrSupportsANSI <- hNowSupportsANSI stderr
-  if stderrSupportsANSI
-    then do
-      hPutStr stderr $ suggestion ++ " ["
-      hSetSGR stderr [SetColor Foreground Vivid Green]
-      hPutStr stderr "Enter"
-      hSetSGR stderr [Reset]
-      hPutStr stderr "/"
-      hSetSGR stderr [SetColor Foreground Vivid Red]
-      hPutStr stderr "Ctrl+C"
-      hSetSGR stderr [Reset]
-      hPutStr stderr "]"
-    else hPutStr stderr $ suggestion ++ " [Ctrl+C/Enter]"
+    request cmd (ByteString.pack apiKey)
+  -- Run interactive menu
+  term <- setupTermFromEnv
+  keypadOnCode <- convert (getCapability term keypadOn) <|> fail "Terminal does not support application keypad mode."
+  hPutStr stderr keypadOnCode -- Enable application mode in terminal
   hFlush stderr
-  _ <- getLine
-  hPutStr stderr "\n"
-  hSetEcho stdin True
+  upCode <- convert (getCapability term keyUp) <|> fail "Terminal does not support upward arrow key."
+  downCode <- convert (getCapability term keyDown) <|> fail "Terminal does not support downward arrow key."
+  -- suggs <- convert (suggestions $ responseBody response) <|> fail "No suggestions."
+  menu <- convert (mkMaybeMenu $ suggestions $ responseBody response) <|> fail "No suggestions."
+  finalMenu <- catch (hInteract stderr upCode downCode menu) handleUserInterrupt
+  -- Write selected correction to stdout
+  putStrLn $ selected finalMenu
 
--- | Exit program on UserInterrupt
-handleUserInterrupt :: AsyncException -> IO ()
+-- | Print "Aborted." on UserInterrupt and then re-throw exception
+handleUserInterrupt :: AsyncException -> IO (Menu a)
 handleUserInterrupt UserInterrupt = do
-  stdoutSupportsANSI <- hNowSupportsANSI stdout
-  when stdoutSupportsANSI (setSGR [SetColor Foreground Vivid Red])
-  putStrLn "\nAborted."
+  stderrSupportsANSI <- hNowSupportsANSI stderr
+  when stderrSupportsANSI (hSetSGR stderr [SetColor Foreground Vivid Red])
+  hPutStrLn stderr "Aborted."
+  when stderrSupportsANSI (hSetSGR stderr [Reset] >> hShowCursor stderr)
   throwIO UserInterrupt
 handleUserInterrupt e = throwIO e

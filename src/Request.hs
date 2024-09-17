@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | This module constructs the API request and interprets the response
@@ -10,86 +9,45 @@ module Request
 
 import           Data.Aeson
 import           Data.ByteString     (ByteString)
-import           Data.Text           (Text)
-import qualified Data.Text           as Text
-import           GHC.Generics
+import           Data.Text.Format
+import           Data.Text.Lazy      (Text)
 import           Lens.Micro.Aeson
-import           Lens.Micro.Platform
+import           Lens.Micro.Platform hiding ((.=))
 import           Network.HTTP.Req
 
--- | Role used in API request
-data Role
-  = System -- ^To set the behavior of the model
-  | User -- ^Message for the model to respond to
-  deriving (Eq, Ord, Show)
+requestContent :: String -> Text
+requestContent command =
+  format
+    "Given the incorrect terminal command \"{}\",\
+    \ provide the most likely corrected version of this command.\
+    \ If there are several highly likely corrections, you may give all of them.\
+    \ Return only the corrected command(s) formatted as a Haskell list of strings, not inside a code block."
+    [command]
 
-instance ToJSON Role where
-  toJSON System = toJSON ("system" :: Text)
-  toJSON User   = toJSON ("user" :: Text)
-
--- | Message given to the model
-data Message =
-  Message
-    { role    :: Role
-    , content :: Text
-    }
-  deriving (Eq, Ord, Show, Generic)
-
-instance ToJSON Message where
-  toEncoding = genericToEncoding defaultOptions
-
--- | GPT model
-data Model
-  = FourO -- ^4o model
-  | FourOMini -- ^4o-mini model
-  deriving (Eq, Ord, Show)
-
-instance ToJSON Model where
-  toJSON FourO     = toJSON ("gpt-4o" :: Text)
-  toJSON FourOMini = toJSON ("gpt-4o-mini" :: Text)
-
--- | Body of API request
-data Body =
-  Body
-    { model    :: Model
-    , messages :: [Message]
-    }
-  deriving (Eq, Ord, Show, Generic)
-
-instance ToJSON Body where
-  toEncoding = genericToEncoding defaultOptions
-
--- | Messages to model, containing the command to be corrected
-requestMessages :: Text -> [Message]
-requestMessages command =
-  [ Message
-      { role = User
-      , content =
-          Text.concat
-            [ "Correct the following terminal command: `"
-            , command
-            , "`. Give me nothing but the command as text, not as a code block."
-            ]
-      }
-  ]
-
--- | Body of request to model
-requestBody :: Text -> Body
-requestBody = Body FourO . requestMessages
+requestBody :: String -> Value
+requestBody command =
+  object
+    [ "model" .= ("gpt-4o" :: String)
+    , "messages" .= 
+        [ object [ "role" .= ("user" :: String), "content" .= requestContent command]]
+    , "temperature" .= (1 :: Double)
+    ]
 
 -- | API request to model
-request :: Body -> ByteString -> Req (JsonResponse Value)
-request body apikey =
+request :: String -> ByteString -> Req (JsonResponse Value)
+request command apikey =
   req
     POST
     (https "api.openai.com" /: "v1" /: "chat" /: "completions")
-    (ReqBodyJson body)
+    (ReqBodyJson $ requestBody command)
     jsonResponse
     (oAuth2Bearer apikey)
 
 -- | Retrieve command suggestions from response
 suggestions :: Value -> [String]
 suggestions =
-  toListOf
+  concat
+  . (read <$>)
+  . toListOf
     (key "choices" .
      _Array . each . key "message" . key "content" . _String . unpacked)

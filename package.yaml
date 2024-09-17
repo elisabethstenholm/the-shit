@@ -30,7 +30,9 @@ dependencies:
 - microlens-platform >= 0.4.3.5
 - microlens-aeson >= 2.5.2
 - process >= 1.6.19.0
+- terminfo >= 0.4.1.6
 - applicative-logic >= 0.1.0.2
+- text-format >= 0.3.2.1
 
 ghc-options:
 - -Wall
