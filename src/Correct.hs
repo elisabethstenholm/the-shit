@@ -43,16 +43,19 @@ correct cmd apiKeyVarName
   menu <-
     convert (mkMaybeMenu $ suggestions $ responseBody response) <|>
     fail "No suggestions."
-  finalMenu <- catch (hInteract stderr upCode downCode menu) handleUserInterrupt
+  stderrSupportsANSI <- hNowSupportsANSI stderr
+  finalMenu <-
+    catch
+      (hInteract stderr stderrSupportsANSI upCode downCode menu)
+      (handleUserInterrupt stderrSupportsANSI)
   -- Write selected correction to stdout
   putStrLn $ selected finalMenu
 
 -- | Print "Aborted." on UserInterrupt and then re-throw exception
-handleUserInterrupt :: AsyncException -> IO (Menu a)
-handleUserInterrupt UserInterrupt = do
-  stderrSupportsANSI <- hNowSupportsANSI stderr
+handleUserInterrupt :: Bool -> AsyncException -> IO (Menu a)
+handleUserInterrupt stderrSupportsANSI UserInterrupt = do
   when stderrSupportsANSI (hSetSGR stderr [SetColor Foreground Vivid Red])
   hPutStrLn stderr "Aborted."
   when stderrSupportsANSI (hSetSGR stderr [Reset] >> hShowCursor stderr)
   throwIO UserInterrupt
-handleUserInterrupt e = throwIO e
+handleUserInterrupt _ e = throwIO e

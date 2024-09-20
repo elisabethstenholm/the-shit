@@ -28,28 +28,6 @@ mkMaybeMenu (x:xs) = Just $ Menu {over = [], selected = x, below = xs}
 menuLength :: Menu a -> Int
 menuLength menu = length (over menu) + length (below menu) + 1
 
--- | User interaction with a menu, returning the last state
-hInteract :: Handle -> String -> String -> Menu String -> IO (Menu String)
-hInteract hdl upCode downCode menu = do
-  hHideCursor hdl
-  hSetEcho stdin False
-  hPrintMenu hdl menu
-  hSetBuffering stdin NoBuffering
-  input <- getContents
-  let menus = menuList menu (keyList upCode downCode input)
-  if null menus
-    then do
-      hShowCursor hdl
-      return menu
-    else do
-      let n = menuLength menu
-      sequence_ $
-        ((hCursorUpLine hdl n >> hClearFromCursorToScreenEnd hdl >>) .
-         hPrintMenu hdl) <$>
-        menus
-      hShowCursor hdl
-      return $ last menus
-
 -- | Up or down key on keyboard
 data Key
   = UpKey
@@ -91,27 +69,49 @@ menuList menu (k:ks) =
   let newMenu = move k menu
    in newMenu : menuList newMenu ks
 
+-- | User interaction with a menu, returning the last state
+hInteract ::
+     Handle -> Bool -> String -> String -> Menu String -> IO (Menu String)
+hInteract hdl hdlSupportsANSI upCode downCode menu = do
+  hHideCursor hdl
+  hSetEcho stdin False
+  hPrintMenu hdl hdlSupportsANSI menu
+  hSetBuffering stdin NoBuffering
+  input <- getContents
+  let menus = menuList menu (keyList upCode downCode input)
+  if null menus
+    then do
+      hShowCursor hdl
+      return menu
+    else do
+      let n = menuLength menu
+      sequence_ $
+        ((hCursorUpLine hdl n >> hClearFromCursorToScreenEnd hdl >>) .
+         hPrintMenu hdl hdlSupportsANSI) <$>
+        menus
+      hShowCursor hdl
+      return $ last menus
+
 -- | Print menu to given handle
-hPrintMenu :: Handle -> Menu String -> IO ()
-hPrintMenu hdl (Menu {over = xs, selected = s, below = ys}) = do
+hPrintMenu :: Handle -> Bool -> Menu String -> IO ()
+hPrintMenu hdl hdlSupportsANSI (Menu {over = xs, selected = s, below = ys}) = do
   mconcat $ fmap (hPutStrLn hdl) xs
   hPutStr hdl s
-  hdlSupportsAnsi <- hNowSupportsANSI hdl
-  hPrintSelector hdl hdlSupportsAnsi (not $ null xs) (not $ null ys)
+  hPrintSelector hdl hdlSupportsANSI (not $ null xs) (not $ null ys)
   mconcat $ fmap (hPutStrLn hdl) ys
   hFlush hdl
 
 -- | Print selector to given handle
 hPrintSelector :: Handle -> Bool -> Bool -> Bool -> IO ()
-hPrintSelector hdl hdlSupportsAnsi isBelow isOver = do
+hPrintSelector hdl hdlSupportsANSI isBelow isOver = do
   hPutStr hdl " ["
-  when hdlSupportsAnsi $ hSetSGR hdl [SetColor Foreground Vivid Green]
+  when hdlSupportsANSI $ hSetSGR hdl [SetColor Foreground Vivid Green]
   hPutStr hdl "Enter"
-  when hdlSupportsAnsi $ hSetSGR hdl [Reset]
+  when hdlSupportsANSI $ hSetSGR hdl [Reset]
   hPutStr hdl "/"
   when isBelow $ hPutStr hdl "↑/"
   when isOver $ hPutStr hdl "↓/"
-  when hdlSupportsAnsi $ hSetSGR hdl [SetColor Foreground Vivid Red]
+  when hdlSupportsANSI $ hSetSGR hdl [SetColor Foreground Vivid Red]
   hPutStr hdl "Ctrl+C"
-  when hdlSupportsAnsi $ hSetSGR hdl [Reset]
+  when hdlSupportsANSI $ hSetSGR hdl [Reset]
   hPutStrLn hdl "]"
