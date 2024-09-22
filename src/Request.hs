@@ -7,13 +7,15 @@ module Request
   , suggestions
   ) where
 
-import           Data.Aeson
+import           Data.Aeson          (Value, object, (.=))
 import           Data.ByteString     (ByteString)
-import           Data.Text.Format
+import           Data.Text.Format    (format)
 import           Data.Text.Lazy      (Text)
-import           Lens.Micro.Aeson
-import           Lens.Micro.Platform hiding ((.=))
-import           Network.HTTP.Req
+import           Lens.Micro.Aeson    (_Array, _String, key)
+import           Lens.Micro.Platform (each, toListOf, unpacked)
+import           Network.HTTP.Req    (JsonResponse, POST (POST), Req,
+                                      ReqBodyJson (ReqBodyJson), https,
+                                      jsonResponse, oAuth2Bearer, req, (/:))
 
 requestContent :: String -> Text
 requestContent command =

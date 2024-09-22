@@ -4,19 +4,27 @@ module Correct
   ( correct
   ) where
 
-import           Request
-import           TUI
+import           Request                   (request, suggestions)
+import           TUI                       (Menu (selected), hInteract,
+                                            mkMaybeMenu)
 
-import           Control.Applicative
-import           Control.Applicative.Logic
-import           Control.Exception
-import           Control.Monad
+import           Control.Applicative       ((<|>))
+import           Control.Applicative.Logic (convert)
+import           Control.Exception         (AsyncException (UserInterrupt),
+                                            catch, throwIO)
+import           Control.Monad             (when)
 import qualified Data.ByteString.Char8     as ByteString
-import           Network.HTTP.Req          hiding (header)
-import           System.Console.ANSI
-import           System.Console.Terminfo   hiding (Green, Red)
-import           System.Environment
-import           System.IO
+import           Network.HTTP.Req          (defaultHttpConfig, responseBody,
+                                            runReq)
+import           System.Console.ANSI       (Color (Red), ColorIntensity (Vivid),
+                                            ConsoleLayer (Foreground),
+                                            SGR (Reset, SetColor),
+                                            hNowSupportsANSI, hSetSGR,
+                                            hShowCursor)
+import           System.Console.Terminfo   (getCapability, keyDown, keyUp,
+                                            keypadOn, setupTermFromEnv)
+import           System.Environment        (lookupEnv)
+import           System.IO                 (hFlush, hPutStr, hPutStrLn, stderr)
 
 correct :: String -> String -> IO ()
 correct cmd apiKeyVarName = do

@@ -5,21 +5,29 @@ module TUI
   , hInteract
   ) where
 
-import           Control.Monad
+import           Control.Monad       (when)
 import           Data.List           (isPrefixOf)
-import           System.Console.ANSI
-import           System.IO
+import           System.Console.ANSI (Color (Green, Red),
+                                      ColorIntensity (Vivid),
+                                      ConsoleLayer (Foreground),
+                                      SGR (Reset, SetColor),
+                                      hClearFromCursorToScreenEnd,
+                                      hCursorUpLine, hHideCursor, hSetSGR,
+                                      hShowCursor)
+import           System.IO           (BufferMode (NoBuffering), Handle, hFlush,
+                                      hPutStr, hPutStrLn, hSetBuffering,
+                                      hSetEcho, stdin)
 
 -- | Menu items together with information about currently selected
 data Menu a =
   Menu
-    { over     :: [a] -- ^Elements over selected element
-    , selected :: a -- ^Selected element
-    , below    :: [a] -- ^Elements below selected element
+    { over     :: [a] -- ^Items over selected item
+    , selected :: a -- ^Selected item
+    , below    :: [a] -- ^Items below selected item
     }
   deriving (Eq, Ord, Show)
 
--- | Make 'Menu' from list with first element as selected
+-- | Make 'Menu' from list with first item as selected
 mkMaybeMenu :: [a] -> Maybe (Menu a)
 mkMaybeMenu []     = Nothing
 mkMaybeMenu (x:xs) = Just $ Menu {over = [], selected = x, below = xs}

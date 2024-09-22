@@ -2,10 +2,15 @@ module Main
   ( main
   ) where
 
-import           Alias
-import           Correct
+import           Alias               (alias)
+import           Correct             (correct)
 
-import           Options.Applicative
+import           Options.Applicative (CommandFields, Mod, Parser, ParserInfo,
+                                      command, customExecParser, help, helper,
+                                      info, long, metavar, prefs, short,
+                                      showDefault, showHelpOnEmpty,
+                                      showHelpOnError, strArgument, strOption,
+                                      subparser, value, (<**>))
 
 main :: IO ()
 main = do
