@@ -19,15 +19,11 @@ import           System.Environment
 import           System.IO
 
 correct :: String -> String -> IO ()
-correct cmd apiKeyVarName
-  -- Make request
- = do
-  maybeApiKey <- lookupEnv apiKeyVarName
+correct cmd apiKeyVarName = do
   apiKey <-
-    convert maybeApiKey <|>
+    (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
   response <- runReq defaultHttpConfig $ request cmd (ByteString.pack apiKey)
-  -- Run interactive menu
   term <- setupTermFromEnv
   keypadOnCode <-
     convert (getCapability term keypadOn) <|>
@@ -48,7 +44,6 @@ correct cmd apiKeyVarName
     catch
       (hInteract stderr stderrSupportsANSI upCode downCode menu)
       (handleUserInterrupt stderrSupportsANSI)
-  -- Write selected correction to stdout
   putStrLn $ selected finalMenu
 
 -- | Print "Aborted." on UserInterrupt and then re-throw exception
