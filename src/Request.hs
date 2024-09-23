@@ -2,8 +2,7 @@
 
 -- | This module constructs the API request and interprets the response
 module Request
-  ( requestBody
-  , request
+  ( request
   , suggestions
   ) where
 
@@ -32,8 +31,8 @@ requestContent aliases command prevCommands =
     \in order of execution."
     [command, aliases, unlines prevCommands]
 
-requestBody :: String -> String -> [String] -> Value
-requestBody aliases command prevCommands =
+requestBody :: String -> String -> [String] -> Double -> Value
+requestBody aliases command prevCommands temp =
   object
     [ "model" .= ("gpt-4o" :: String)
     , "messages" .=
@@ -42,17 +41,22 @@ requestBody aliases command prevCommands =
           , "content" .= requestContent aliases command prevCommands
           ]
       ]
-    , "temperature" .= (1 :: Double)
+    , "temperature" .= temp
     ]
 
 -- | API request to model
 request ::
-     String -> String -> [String] -> ByteString -> Req (JsonResponse Value)
-request aliases command prevCommands apikey =
+     String
+  -> String
+  -> [String]
+  -> ByteString
+  -> Double
+  -> Req (JsonResponse Value)
+request aliases command prevCommands apikey temp =
   req
     POST
     (https "api.openai.com" /: "v1" /: "chat" /: "completions")
-    (ReqBodyJson $ requestBody aliases command prevCommands)
+    (ReqBodyJson $ requestBody aliases command prevCommands temp)
     jsonResponse
     (oAuth2Bearer apikey)
 

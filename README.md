@@ -116,3 +116,17 @@ eval $(the-shit alias --var-name MY_API_KEY)
 The Shit will then use the contents of the environment variable `MY_API_KEY` as
 the API key for the requests. The default is `OPENAI_API_KEY`, if no variable
 name is provided.
+
+### Custom temperature
+
+You can set the temperature used in the API request by giving it as an argument
+to `the-shit alias` in your `~/.bashrc` like so:
+
+```bash
+eval $(the-shit alias --temperature 0.5)
+```
+
+The temperature should be a real number between `0` and `2`. The higher the
+number the more random the suggestions, and the smaller the number the more
+deterministic the suggestions. Any number smaller than `0` will be rounded up to
+`0`, and any number larger than `2` will be rounded down to `2`.

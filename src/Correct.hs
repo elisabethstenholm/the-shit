@@ -29,8 +29,8 @@ import           System.Environment        (lookupEnv)
 import           System.IO                 (hFlush, hPutStr, hPutStrLn, stderr)
 import           System.Process            (readProcess)
 
-correct :: String -> String -> Shell -> IO ()
-correct cmds apiKeyVarName shell = do
+correct :: String -> String -> Double -> Shell -> IO ()
+correct cmds apiKeyVarName temp shell = do
   apiKey <-
     (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
@@ -39,7 +39,7 @@ correct cmds apiKeyVarName shell = do
     convert (unsnoc $ lines cmds) <|> fail "No command provided."
   response <-
     runReq defaultHttpConfig $
-    request aliases cmd prevCmds (ByteString.pack apiKey)
+    request aliases cmd prevCmds (ByteString.pack apiKey) temp
   term <- setupTermFromEnv
   keypadOnCode <-
     convert (getCapability term keypadOn) <|>
