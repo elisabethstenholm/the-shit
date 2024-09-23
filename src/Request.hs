@@ -17,38 +17,42 @@ import           Network.HTTP.Req    (JsonResponse, POST (POST), Req,
                                       ReqBodyJson (ReqBodyJson), https,
                                       jsonResponse, oAuth2Bearer, req, (/:))
 
-requestContent :: String -> String -> Text
-requestContent aliases command =
+requestContent :: String -> String -> [String] -> Text
+requestContent aliases command prevCommands =
   format
-    "Given the incorrect terminal command \"{}\",\
-    \ provide the most likely corrected version of this command.\
-    \ If there are several highly likely corrections, you may give all of them.\
-    \ Return only the corrected command(s) formatted as a Haskell list of strings, not inside a code block.\
+    "Given the incorrect terminal command \"{}\", \
+    \provide the most likely corrected version of this command. \
+    \If there are several highly likely corrections, you may give all of them. \
+    \Return only the corrected command(s) formatted as a Haskell list of strings, not inside a code block. \
     \\
-    \ For reference, I have the following aliases:\
-    \ ```{}```"
-    [command, aliases]
+    \For reference, I have the following aliases:\n\
+    \```{}```\n\
+    \and the last commands before the incorrect one were:\n\
+    \```{}```\n\
+    \in order of execution."
+    [command, aliases, unlines prevCommands]
 
-requestBody :: String -> String -> Value
-requestBody aliases command =
+requestBody :: String -> String -> [String] -> Value
+requestBody aliases command prevCommands =
   object
     [ "model" .= ("gpt-4o" :: String)
     , "messages" .=
       [ object
           [ "role" .= ("user" :: String)
-          , "content" .= requestContent aliases command
+          , "content" .= requestContent aliases command prevCommands
           ]
       ]
     , "temperature" .= (1 :: Double)
     ]
 
 -- | API request to model
-request :: String -> String -> ByteString -> Req (JsonResponse Value)
-request aliases command apikey =
+request ::
+     String -> String -> [String] -> ByteString -> Req (JsonResponse Value)
+request aliases command prevCommands apikey =
   req
     POST
     (https "api.openai.com" /: "v1" /: "chat" /: "completions")
-    (ReqBodyJson $ requestBody aliases command)
+    (ReqBodyJson $ requestBody aliases command prevCommands)
     jsonResponse
     (oAuth2Bearer apikey)
 

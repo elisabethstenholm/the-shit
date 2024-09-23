@@ -41,6 +41,7 @@ library
     , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
+    , extra >=1.7.16
     , microlens-aeson >=2.5.2
     , microlens-platform >=0.4.3.5
     , optparse-applicative >=0.18.1.0
@@ -65,6 +66,7 @@ executable the-shit
     , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
+    , extra >=1.7.16
     , microlens-aeson >=2.5.2
     , microlens-platform >=0.4.3.5
     , optparse-applicative >=0.18.1.0
@@ -91,6 +93,7 @@ test-suite the-shit-test
     , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
+    , extra >=1.7.16
     , microlens-aeson >=2.5.2
     , microlens-platform >=0.4.3.5
     , optparse-applicative >=0.18.1.0

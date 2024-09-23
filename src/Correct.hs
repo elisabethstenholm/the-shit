@@ -15,6 +15,7 @@ import           Control.Exception         (AsyncException (UserInterrupt),
                                             catch, throwIO)
 import           Control.Monad             (when)
 import qualified Data.ByteString.Char8     as ByteString
+import           Data.List.Extra           (unsnoc)
 import           Network.HTTP.Req          (defaultHttpConfig, responseBody,
                                             runReq)
 import           System.Console.ANSI       (Color (Red), ColorIntensity (Vivid),
@@ -29,13 +30,16 @@ import           System.IO                 (hFlush, hPutStr, hPutStrLn, stderr)
 import           System.Process            (readProcess)
 
 correct :: String -> String -> Shell -> IO ()
-correct cmd apiKeyVarName shell = do
+correct cmds apiKeyVarName shell = do
   apiKey <-
     (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
   aliases <- readProcess (show shell) ["-ic", "alias"] []
+  (prevCmds, cmd) <-
+    convert (unsnoc $ lines cmds) <|> fail "No command provided."
   response <-
-    runReq defaultHttpConfig $ request aliases cmd (ByteString.pack apiKey)
+    runReq defaultHttpConfig $
+    request aliases cmd prevCmds (ByteString.pack apiKey)
   term <- setupTermFromEnv
   keypadOnCode <-
     convert (getCapability term keypadOn) <|>

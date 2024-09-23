@@ -25,7 +25,7 @@ aliasText apiKeyVarName aliasName shell =
   format
     "{} () {\n\
     \    TF_CMD=$(\n\
-    \            the-shit correct \"$(fc -ln -1)\" -n \"{}\"\n\
+    \            the-shit correct \"$(fc -ln -10)\" -n \"{}\"\n\
     \    ) && eval \"$TF_CMD\";\n\
     \    test -n \"$TF_CMD\" && {} \"$TF_CMD\";\n\
     \}"
