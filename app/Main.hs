@@ -2,33 +2,23 @@ module Main
   ( main
   ) where
 
-import           Alias                           (alias)
-import           Correct                         (correct)
-import           Shell                           (toShell)
+import           Alias               (alias)
+import           Correct             (correct)
 
-import           Options.Applicative             (CommandFields, Mod, Parser,
-                                                  ParserInfo, auto, command,
-                                                  customExecParser, help,
-                                                  helper, info, long, metavar,
-                                                  option, prefs, short,
-                                                  showDefault, showHelpOnEmpty,
-                                                  showHelpOnError, strArgument,
-                                                  strOption, subparser, value,
-                                                  (<**>))
-import           System.Posix.Process.ByteString (getParentProcessID)
-import           System.Process                  (readProcess)
+import           Options.Applicative (CommandFields, Mod, Parser, ParserInfo,
+                                      auto, command, customExecParser, help,
+                                      helper, info, long, metavar, option,
+                                      prefs, short, showDefault,
+                                      showHelpOnEmpty, showHelpOnError,
+                                      strArgument, strOption, subparser, value,
+                                      (<**>))
 
 main :: IO ()
 main = do
-  ppid <- getParentProcessID
-  shell <-
-    (toShell . filter (/= '\n')) <$>
-    readProcess "ps" ["-p", show ppid, "-o", "comm="] ""
   mode <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
   case mode of
-    CorrectMode cmd apiKeyVarName temp -> correct cmd apiKeyVarName temp shell
-    AliasMode apiKeyVarName aliasName temp ->
-      alias apiKeyVarName aliasName temp shell
+    CorrectMode cmd apiKeyVarName temp     -> correct cmd apiKeyVarName temp
+    AliasMode apiKeyVarName aliasName temp -> alias apiKeyVarName aliasName temp
 
 -- | Program mode
 data Mode

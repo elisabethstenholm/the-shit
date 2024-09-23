@@ -5,7 +5,6 @@ module Correct
   ) where
 
 import           Request                   (request, suggestions)
-import           Shell                     (Shell)
 import           TUI                       (Menu (selected), hInteract,
                                             mkMaybeMenu)
 
@@ -15,7 +14,6 @@ import           Control.Exception         (AsyncException (UserInterrupt),
                                             catch, throwIO)
 import           Control.Monad             (when)
 import qualified Data.ByteString.Char8     as ByteString
-import           Data.List.Extra           (unsnoc)
 import           Network.HTTP.Req          (defaultHttpConfig, responseBody,
                                             runReq)
 import           System.Console.ANSI       (Color (Red), ColorIntensity (Vivid),
@@ -27,16 +25,18 @@ import           System.Console.Terminfo   (getCapability, keyDown, keyUp,
                                             keypadOn, setupTermFromEnv)
 import           System.Environment        (lookupEnv)
 import           System.IO                 (hFlush, hPutStr, hPutStrLn, stderr)
-import           System.Process            (readProcess)
 
-correct :: String -> String -> Double -> Shell -> IO ()
-correct cmds apiKeyVarName temp shell = do
+correct :: String -> String -> Double -> IO ()
+correct cmd apiKeyVarName temp = do
   apiKey <-
     (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
-  aliases <- readProcess (show shell) ["-ic", "alias"] []
-  (prevCmds, cmd) <-
-    convert (unsnoc $ lines cmds) <|> fail "No command provided."
+  aliases <-
+    (lookupEnv "TS_SHELL_ALIASES" >>= convert) <|>
+    fail ("No environment variable TS_SHELL_ALIASES.")
+  prevCmds <-
+    (lookupEnv "TS_HISTORY" >>= convert) <|>
+    fail ("No environment variable TS_HISTORY.")
   response <-
     runReq defaultHttpConfig $
     request aliases cmd prevCmds (ByteString.pack apiKey) temp

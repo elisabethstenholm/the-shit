@@ -16,7 +16,7 @@ import           Network.HTTP.Req    (JsonResponse, POST (POST), Req,
                                       ReqBodyJson (ReqBodyJson), https,
                                       jsonResponse, oAuth2Bearer, req, (/:))
 
-requestContent :: String -> String -> [String] -> Text
+requestContent :: String -> String -> String -> Text
 requestContent aliases command prevCommands =
   format
     "Given the incorrect terminal command \"{}\", \
@@ -29,9 +29,9 @@ requestContent aliases command prevCommands =
     \and the last commands before the incorrect one were:\n\
     \```{}```\n\
     \in order of execution."
-    [command, aliases, unlines prevCommands]
+    [command, aliases, prevCommands]
 
-requestBody :: String -> String -> [String] -> Double -> Value
+requestBody :: String -> String -> String -> Double -> Value
 requestBody aliases command prevCommands temp =
   object
     [ "model" .= ("gpt-4o" :: String)
@@ -48,7 +48,7 @@ requestBody aliases command prevCommands temp =
 request ::
      String
   -> String
-  -> [String]
+  -> String
   -> ByteString
   -> Double
   -> Req (JsonResponse Value)
