@@ -17,33 +17,38 @@ import           Network.HTTP.Req    (JsonResponse, POST (POST), Req,
                                       ReqBodyJson (ReqBodyJson), https,
                                       jsonResponse, oAuth2Bearer, req, (/:))
 
-requestContent :: String -> Text
-requestContent command =
+requestContent :: String -> String -> Text
+requestContent aliases command =
   format
     "Given the incorrect terminal command \"{}\",\
     \ provide the most likely corrected version of this command.\
     \ If there are several highly likely corrections, you may give all of them.\
-    \ Return only the corrected command(s) formatted as a Haskell list of strings, not inside a code block."
-    [command]
+    \ Return only the corrected command(s) formatted as a Haskell list of strings, not inside a code block.\
+    \\
+    \ For reference, I have the following aliases:\
+    \ ```{}```"
+    [command, aliases]
 
-requestBody :: String -> Value
-requestBody command =
+requestBody :: String -> String -> Value
+requestBody aliases command =
   object
     [ "model" .= ("gpt-4o" :: String)
     , "messages" .=
       [ object
-          ["role" .= ("user" :: String), "content" .= requestContent command]
+          [ "role" .= ("user" :: String)
+          , "content" .= requestContent aliases command
+          ]
       ]
     , "temperature" .= (1 :: Double)
     ]
 
 -- | API request to model
-request :: String -> ByteString -> Req (JsonResponse Value)
-request command apikey =
+request :: String -> String -> ByteString -> Req (JsonResponse Value)
+request aliases command apikey =
   req
     POST
     (https "api.openai.com" /: "v1" /: "chat" /: "completions")
-    (ReqBodyJson $ requestBody command)
+    (ReqBodyJson $ requestBody aliases command)
     jsonResponse
     (oAuth2Bearer apikey)
 

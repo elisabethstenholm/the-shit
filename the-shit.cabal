@@ -28,6 +28,7 @@ library
       Alias
       Correct
       Request
+      Shell
       TUI
   other-modules:
       Paths_the_shit

@@ -5,6 +5,7 @@ module Correct
   ) where
 
 import           Request                   (request, suggestions)
+import           Shell                     (Shell)
 import           TUI                       (Menu (selected), hInteract,
                                             mkMaybeMenu)
 
@@ -25,13 +26,16 @@ import           System.Console.Terminfo   (getCapability, keyDown, keyUp,
                                             keypadOn, setupTermFromEnv)
 import           System.Environment        (lookupEnv)
 import           System.IO                 (hFlush, hPutStr, hPutStrLn, stderr)
+import           System.Process            (readProcess)
 
-correct :: String -> String -> IO ()
-correct cmd apiKeyVarName = do
+correct :: String -> String -> Shell -> IO ()
+correct cmd apiKeyVarName shell = do
   apiKey <-
     (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
-  response <- runReq defaultHttpConfig $ request cmd (ByteString.pack apiKey)
+  aliases <- readProcess (show shell) ["-ic", "alias"] []
+  response <-
+    runReq defaultHttpConfig $ request aliases cmd (ByteString.pack apiKey)
   term <- setupTermFromEnv
   keypadOnCode <-
     convert (getCapability term keypadOn) <|>
