@@ -4,7 +4,8 @@
 uses OpenAI to generate corrections. Currently supported shells are Bash and
 Zsh.
 
-**Note:** you must have a valid OpenAI API key to be able to use The Shit.
+**Note:** you must have a valid OpenAI API key stored in the environment
+variable `OPENAI_API_KEY` (or a custom variable, [see below](#custom-api-key-environment-variable)) to be able to use The Shit.
 
 Create an OpenAI account: <https://openai.com/api/>
 
@@ -55,8 +56,8 @@ sudo pacman -S vim [Enter/Ctrl+C]
 
 ## Installation
 
-Installation is done by cloning this repository and building using Stack. First,
-clone the repository:
+Installation is done by cloning this repository and then installing the program
+using Stack. First, clone the repository:
 
 ```bash
 git clone git@github.com:elisabethstenholm/the-shit.git
@@ -77,14 +78,15 @@ stack install
 (If you do not have Stack installed, you can find installation instructions
 [here](https://docs.haskellstack.org/en/stable/#how-to-install-stack).)
 
-Finally, add the following to your `.bashrc` or `.zshrc`:
+Finally, add the following to your shell configuration file, i.e. `.bashrc` or
+`.zshrc` depending on which shell you use:
 
 ```bash
 eval $(the-shit alias)
 ```
 
 The Shit will be available the next time you start a terminal, or in the current
-session by sourcing your `.bashrc` or `.zshrc`:
+session by sourcing your shell config file:
 
 ```bash
 source ~/.bashrc
@@ -95,19 +97,20 @@ source ~/.bashrc
 ### Custom alias
 
 You can choose your own alias by giving it as an argument to `the-shit alias` in
-your `~/.bashrc` like so:
+your shell config file like so:
 
 ```bash
 eval $(the-shit alias --alias-name fuck)
 ```
 
-This would invoke The Shit by typing `fuck` in the terminal. The default is
-`shit`, if no alias name is provided.
+This would invoke instead The Shit by typing `fuck` in the terminal. The default
+is `shit`, if no alias name is provided.
 
 ### Custom API key environment variable
 
 You can set the name of the environment variable where your OpenAI API key is
-stored by giving it as an argument to `the-shit alias` in your `~/.bashrc` like so:
+stored by giving it as an argument to `the-shit alias` in your shell config file
+like so:
 
 ```bash
 eval $(the-shit alias --var-name MY_API_KEY)
@@ -120,7 +123,7 @@ name is provided.
 ### Custom temperature
 
 You can set the temperature used in the API request by giving it as an argument
-to `the-shit alias` in your `~/.bashrc` like so:
+to `the-shit alias` in your shell config file like so:
 
 ```bash
 eval $(the-shit alias --temperature 0.5)
