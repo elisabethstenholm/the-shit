@@ -47,7 +47,7 @@ sendRequest cmd apiKeyVarName temp = do
     fail ("No environment variable TS_HISTORY.")
   suggestions <$> responseBody <$>
     (runReq defaultHttpConfig $
-     request aliases cmd prevCmds (ByteString.pack apiKey) temp)
+     request cmd aliases prevCmds (ByteString.pack apiKey) temp)
 
 -- | Interact with user and return selected command or abort on user interruption
 hGetUserChoice :: Handle -> Handle -> [String] -> IO String

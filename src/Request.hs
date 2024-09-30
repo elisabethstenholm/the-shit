@@ -17,7 +17,7 @@ import           Network.HTTP.Req    (JsonResponse, POST (POST), Req,
                                       jsonResponse, oAuth2Bearer, req, (/:))
 
 requestContent :: String -> String -> String -> Text
-requestContent aliases command prevCommands =
+requestContent command aliases prevCommands =
   format
     "Given the incorrect terminal command \"{}\", \
     \provide the most likely corrected version of this command. \
@@ -32,13 +32,13 @@ requestContent aliases command prevCommands =
     [command, aliases, prevCommands]
 
 requestBody :: String -> String -> String -> Double -> Value
-requestBody aliases command prevCommands temp =
+requestBody command aliases prevCommands temp =
   object
     [ "model" .= ("gpt-4o" :: String)
     , "messages" .=
       [ object
           [ "role" .= ("user" :: String)
-          , "content" .= requestContent aliases command prevCommands
+          , "content" .= requestContent command aliases prevCommands
           ]
       ]
     , "temperature" .= temp
@@ -52,11 +52,11 @@ request ::
   -> ByteString
   -> Double
   -> Req (JsonResponse Value)
-request aliases command prevCommands apikey temp =
+request command aliases prevCommands apikey temp =
   req
     POST
     (https "api.openai.com" /: "v1" /: "chat" /: "completions")
-    (ReqBodyJson $ requestBody aliases command prevCommands temp)
+    (ReqBodyJson $ requestBody command aliases prevCommands temp)
     jsonResponse
     (oAuth2Bearer apikey)
 
