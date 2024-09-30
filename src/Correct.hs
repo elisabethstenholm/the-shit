@@ -5,7 +5,7 @@ module Correct
   ) where
 
 import           Request                   (request, suggestions)
-import           TUI                       (Menu (selected), hInteract,
+import           TUI                       (Menu (selected), hInteractWithMenu,
                                             mkMaybeMenu)
 
 import           Control.Applicative       ((<|>))
@@ -24,10 +24,18 @@ import           System.Console.ANSI       (Color (Red), ColorIntensity (Vivid),
 import           System.Console.Terminfo   (getCapability, keyDown, keyUp,
                                             keypadOn, setupTermFromEnv)
 import           System.Environment        (lookupEnv)
-import           System.IO                 (hFlush, hPutStr, hPutStrLn, stderr)
+import           System.IO                 (Handle, hFlush, hPutStr, hPutStrLn,
+                                            stderr, stdin)
 
 correct :: String -> String -> Double -> IO ()
 correct cmd apiKeyVarName temp = do
+  choices <- sendRequest cmd apiKeyVarName temp
+  choice <- hGetUserChoice stdin stderr choices
+  putStrLn $ choice
+
+-- | Send request to OpenAI and parse the response as a list of commands
+sendRequest :: String -> String -> Double -> IO [String]
+sendRequest cmd apiKeyVarName temp = do
   apiKey <-
     (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
@@ -37,36 +45,38 @@ correct cmd apiKeyVarName temp = do
   prevCmds <-
     (lookupEnv "TS_HISTORY" >>= convert) <|>
     fail ("No environment variable TS_HISTORY.")
-  response <-
-    runReq defaultHttpConfig $
-    request aliases cmd prevCmds (ByteString.pack apiKey) temp
+  suggestions <$> responseBody <$>
+    (runReq defaultHttpConfig $
+     request aliases cmd prevCmds (ByteString.pack apiKey) temp)
+
+-- | Interact with user and return selected command or abort on user interruption
+hGetUserChoice :: Handle -> Handle -> [String] -> IO String
+hGetUserChoice hdlIn hdlOut choices = do
+  menu <- convert (mkMaybeMenu $ choices) <|> fail "No suggestions."
   term <- setupTermFromEnv
   keypadOnCode <-
     convert (getCapability term keypadOn) <|>
     fail "Terminal does not support application keypad mode."
-  hPutStr stderr keypadOnCode -- Enable application mode in terminal
-  hFlush stderr
+  hPutStr hdlOut keypadOnCode
+  hFlush hdlOut
   upCode <-
     convert (getCapability term keyUp) <|>
     fail "Terminal does not support upward arrow key."
   downCode <-
     convert (getCapability term keyDown) <|>
     fail "Terminal does not support downward arrow key."
-  menu <-
-    convert (mkMaybeMenu $ suggestions $ responseBody response) <|>
-    fail "No suggestions."
-  stderrSupportsANSI <- hNowSupportsANSI stderr
+  hdlOutSupportsANSI <- hNowSupportsANSI hdlOut
   finalMenu <-
     catch
-      (hInteract stderr stderrSupportsANSI upCode downCode menu)
-      (handleUserInterrupt stderrSupportsANSI)
-  putStrLn $ selected finalMenu
+      (hInteractWithMenu hdlIn hdlOut hdlOutSupportsANSI upCode downCode menu)
+      (hHandleUserInterrupt hdlOut hdlOutSupportsANSI)
+  return $ selected finalMenu
 
 -- | Print "Aborted." on UserInterrupt and then re-throw exception
-handleUserInterrupt :: Bool -> AsyncException -> IO (Menu a)
-handleUserInterrupt stderrSupportsANSI UserInterrupt = do
-  when stderrSupportsANSI (hSetSGR stderr [SetColor Foreground Vivid Red])
-  hPutStrLn stderr "Aborted."
-  when stderrSupportsANSI (hSetSGR stderr [Reset] >> hShowCursor stderr)
+hHandleUserInterrupt :: Handle -> Bool -> AsyncException -> IO (Menu a)
+hHandleUserInterrupt hdl hdlSupportsANSI UserInterrupt = do
+  when hdlSupportsANSI (hSetSGR hdl [SetColor Foreground Vivid Red])
+  hPutStrLn hdl "Aborted."
+  when hdlSupportsANSI (hSetSGR hdl [Reset] >> hShowCursor hdl)
   throwIO UserInterrupt
-handleUserInterrupt _ e = throwIO e
+hHandleUserInterrupt _ _ e = throwIO e

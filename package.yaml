@@ -36,6 +36,11 @@ dependencies:
 - text-format >= 0.3.2.1
 - unix >= 2.8.4.0
 - process >= 1.6.19.0
+- hspec >= 2.11.9
+- QuickCheck >= 2.14.3
+- tasty >= 1.4.3
+- tasty-quickcheck >= 0.10.2
+- tasty-hspec >= 1.2.0.4
 
 ghc-options:
 - -Wall

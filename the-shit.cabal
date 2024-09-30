@@ -36,17 +36,22 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      aeson >=2.1.2.1
+      QuickCheck >=2.14.3
+    , aeson >=2.1.2.1
     , ansi-terminal >=1.0.2
     , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , extra >=1.7.16
+    , hspec >=2.11.9
     , microlens-aeson >=2.5.2
     , microlens-platform >=0.4.3.5
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
+    , tasty >=1.4.3
+    , tasty-hspec >=1.2.0.4
+    , tasty-quickcheck >=0.10.2
     , terminfo >=0.4.1.6
     , text >=2.0.2
     , text-format >=0.3.2.1
@@ -61,17 +66,22 @@ executable the-shit
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson >=2.1.2.1
+      QuickCheck >=2.14.3
+    , aeson >=2.1.2.1
     , ansi-terminal >=1.0.2
     , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , extra >=1.7.16
+    , hspec >=2.11.9
     , microlens-aeson >=2.5.2
     , microlens-platform >=0.4.3.5
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
+    , tasty >=1.4.3
+    , tasty-hspec >=1.2.0.4
+    , tasty-quickcheck >=0.10.2
     , terminfo >=0.4.1.6
     , text >=2.0.2
     , text-format >=0.3.2.1
@@ -83,22 +93,28 @@ test-suite the-shit-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      UserInteractions
       Paths_the_shit
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson >=2.1.2.1
+      QuickCheck >=2.14.3
+    , aeson >=2.1.2.1
     , ansi-terminal >=1.0.2
     , applicative-logic >=0.1.0.2
     , base >=4.7 && <5
     , bytestring >=0.11.5.3
     , extra >=1.7.16
+    , hspec >=2.11.9
     , microlens-aeson >=2.5.2
     , microlens-platform >=0.4.3.5
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
+    , tasty >=1.4.3
+    , tasty-hspec >=1.2.0.4
+    , tasty-quickcheck >=0.10.2
     , terminfo >=0.4.1.6
     , text >=2.0.2
     , text-format >=0.3.2.1

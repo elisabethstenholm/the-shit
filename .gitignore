@@ -1,2 +1,4 @@
 .stack-work/
 *~
+test/mock_stdin.txt
+test/mock_stderr.txt

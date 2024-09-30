@@ -1,8 +1,11 @@
 -- | Module containing the terminal user interface (TUI)
 module TUI
   ( Menu(..)
+  , Key(..)
   , mkMaybeMenu
-  , hInteract
+  , hInteractWithMenu
+  , keyList
+  , menuList
   ) where
 
 import           Control.Monad       (when)
@@ -15,8 +18,8 @@ import           System.Console.ANSI (Color (Green, Red),
                                       hCursorUpLine, hHideCursor, hSetSGR,
                                       hShowCursor)
 import           System.IO           (BufferMode (NoBuffering), Handle, hFlush,
-                                      hPutStr, hPutStrLn, hSetBuffering,
-                                      hSetEcho, stdin)
+                                      hGetContents, hPutStr, hPutStrLn,
+                                      hSetBuffering, hSetEcho)
 
 -- | Menu items together with information about currently selected
 data Menu a =
@@ -78,26 +81,32 @@ menuList menu (k:ks) =
    in newMenu : menuList newMenu ks
 
 -- | User interaction with a menu, returning the last state
-hInteract ::
-     Handle -> Bool -> String -> String -> Menu String -> IO (Menu String)
-hInteract hdl hdlSupportsANSI upCode downCode menu = do
-  hHideCursor hdl
-  hSetEcho stdin False
-  hPrintMenu hdl hdlSupportsANSI menu
-  hSetBuffering stdin NoBuffering
-  input <- getContents
+hInteractWithMenu ::
+     Handle
+  -> Handle
+  -> Bool
+  -> String
+  -> String
+  -> Menu String
+  -> IO (Menu String)
+hInteractWithMenu hdlIn hdlOut hdlOutSupportsANSI upCode downCode menu = do
+  hHideCursor hdlOut
+  hSetEcho hdlIn False
+  hPrintMenu hdlOut hdlOutSupportsANSI menu
+  hSetBuffering hdlIn NoBuffering
+  input <- hGetContents hdlIn
   let menus = menuList menu (keyList upCode downCode input)
   if null menus
     then do
-      hShowCursor hdl
+      hShowCursor hdlOut
       return menu
     else do
       let n = menuLength menu
       sequence_ $
-        ((hCursorUpLine hdl n >> hClearFromCursorToScreenEnd hdl >>) .
-         hPrintMenu hdl hdlSupportsANSI) <$>
+        ((hCursorUpLine hdlOut n >> hClearFromCursorToScreenEnd hdlOut >>) .
+         hPrintMenu hdlOut hdlOutSupportsANSI) <$>
         menus
-      hShowCursor hdl
+      hShowCursor hdlOut
       return $ last menus
 
 -- | Print menu to given handle
