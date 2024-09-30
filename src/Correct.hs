@@ -14,6 +14,7 @@ import           Control.Exception         (AsyncException (UserInterrupt),
                                             catch, throwIO)
 import           Control.Monad             (when)
 import qualified Data.ByteString.Char8     as ByteString
+import           Data.Maybe                (fromMaybe)
 import           Network.HTTP.Req          (defaultHttpConfig, responseBody,
                                             runReq)
 import           System.Console.ANSI       (Color (Red), ColorIntensity (Vivid),
@@ -39,12 +40,8 @@ sendRequest cmd apiKeyVarName temp = do
   apiKey <-
     (lookupEnv apiKeyVarName >>= convert) <|>
     fail ("No environment variable " ++ apiKeyVarName ++ ".")
-  aliases <-
-    (lookupEnv "TS_SHELL_ALIASES" >>= convert) <|>
-    fail ("No environment variable TS_SHELL_ALIASES.")
-  prevCmds <-
-    (lookupEnv "TS_HISTORY" >>= convert) <|>
-    fail ("No environment variable TS_HISTORY.")
+  aliases <- (lookupEnv "TS_SHELL_ALIASES" >>= (return . fromMaybe ""))
+  prevCmds <- (lookupEnv "TS_HISTORY" >>= (return . fromMaybe ""))
   suggestions <$> responseBody <$>
     (runReq defaultHttpConfig $
      request cmd aliases prevCmds (ByteString.pack apiKey) temp)
