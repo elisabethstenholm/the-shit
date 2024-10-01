@@ -132,4 +132,5 @@ eval $(the-shit alias --temperature 0.5)
 The temperature should be a real number between `0` and `2`. The higher the
 number the more random the suggestions, and the smaller the number the more
 deterministic the suggestions. Any number smaller than `0` will be rounded up to
-`0`, and any number larger than `2` will be rounded down to `2`.
+`0`, and any number larger than `2` will be rounded down to `2`. The default
+value is `1`, if no temperature is provided.
