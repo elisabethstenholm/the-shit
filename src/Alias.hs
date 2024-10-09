@@ -6,7 +6,8 @@ module Alias
   ( alias
   ) where
 
-import           Shell                           (Shell (..), toShell)
+import           Shell                           (Shell (..),
+                                                  readShellWithDefault)
 
 import           Data.Text.Format                (format)
 import           Data.Text.Lazy                  (Text)
@@ -18,7 +19,7 @@ alias :: String -> String -> Double -> IO ()
 alias apiKeyVarName aliasName temp = do
   ppid <- getParentProcessID
   shell <-
-    (toShell . filter (/= '\n')) <$>
+    (readShellWithDefault Bash . filter (/= '\n')) <$>
     readProcess "ps" ["-p", show ppid, "-o", "comm="] ""
   putStrLn $ Text.unpack $ aliasText apiKeyVarName aliasName temp shell
 

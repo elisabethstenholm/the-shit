@@ -2,7 +2,7 @@
 --   supported shells
 module Shell
   ( Shell(..)
-  , toShell
+  , readShellWithDefault
   ) where
 
 import           Data.Char  (toLower)
@@ -27,5 +27,5 @@ instance Read Shell where
       _      -> []
 
 -- | Read Shell with Bash as default
-toShell :: String -> Shell
-toShell = fromMaybe Bash . readMaybe
+readShellWithDefault :: Shell -> String -> Shell
+readShellWithDefault s = fromMaybe s . readMaybe

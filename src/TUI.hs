@@ -10,6 +10,8 @@ module TUI
 
 import           Control.Monad       (when)
 import           Data.List           (isPrefixOf)
+import           Data.Maybe          (fromMaybe)
+import           Safe                (lastMay)
 import           System.Console.ANSI (Color (Green, Red),
                                       ColorIntensity (Vivid),
                                       ConsoleLayer (Foreground),
@@ -47,13 +49,13 @@ data Key
 
 -- | Move up in menu if possible
 moveUp :: Menu a -> Menu a
-moveUp menu@(Menu {over = [], selected = _, below = _}) = menu
+moveUp menu@(Menu {over = []}) = menu
 moveUp (Menu {over = xs, selected = y, below = ys}) =
   Menu {over = init xs, selected = last xs, below = y : ys}
 
 -- | Move down in menu if possible
 moveDown :: Menu a -> Menu a
-moveDown menu@(Menu {over = _, selected = _, below = []}) = menu
+moveDown menu@(Menu {below = []}) = menu
 moveDown (Menu {over = xs, selected = x, below = (y:ys)}) =
   Menu {over = xs ++ [x], selected = y, below = ys}
 
@@ -96,18 +98,13 @@ hInteractWithMenu hdlIn hdlOut hdlOutSupportsANSI upCode downCode menu = do
   hSetBuffering hdlIn NoBuffering
   input <- hGetContents hdlIn
   let menus = menuList menu (keyList upCode downCode input)
-  if null menus
-    then do
-      hShowCursor hdlOut
-      return menu
-    else do
-      let n = menuLength menu
-      sequence_ $
-        ((hCursorUpLine hdlOut n >> hClearFromCursorToScreenEnd hdlOut >>) .
-         hPrintMenu hdlOut hdlOutSupportsANSI) <$>
-        menus
-      hShowCursor hdlOut
-      return $ last menus
+  let n = menuLength menu
+  sequence_ $
+    ((hCursorUpLine hdlOut n >> hClearFromCursorToScreenEnd hdlOut >>) .
+     hPrintMenu hdlOut hdlOutSupportsANSI) <$>
+    menus
+  hShowCursor hdlOut
+  return $ fromMaybe menu $ lastMay menus
 
 -- | Print menu to given handle
 hPrintMenu :: Handle -> Bool -> Menu String -> IO ()

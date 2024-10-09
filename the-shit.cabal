@@ -49,6 +49,7 @@ library
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
+    , safe >=0.3.21
     , tasty >=1.4.3
     , tasty-hspec >=1.2.0.4
     , tasty-quickcheck >=0.10.2
@@ -79,6 +80,7 @@ executable the-shit
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
+    , safe >=0.3.21
     , tasty >=1.4.3
     , tasty-hspec >=1.2.0.4
     , tasty-quickcheck >=0.10.2
@@ -112,6 +114,7 @@ test-suite the-shit-test
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
+    , safe >=0.3.21
     , tasty >=1.4.3
     , tasty-hspec >=1.2.0.4
     , tasty-quickcheck >=0.10.2
