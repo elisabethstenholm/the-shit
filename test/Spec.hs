@@ -1,5 +1,6 @@
-import           TUI                   (Key (..), Menu (..), hInteractWithMenu,
-                                        keyList, menuList)
+import           TUI                   (Direction (..), Menu (..),
+                                        directionList, hInteractWithMenu,
+                                        menuList)
 import           UserInteractions      (userInteractions)
 
 import           System.IO             (IOMode (ReadMode, WriteMode), hClose,
@@ -35,31 +36,32 @@ testHInteractWithMenu (upCode, downCode, userInput, startMenu, endMenu) = do
     menu `shouldBe`
     endMenu
 
-instance Arbitrary Key where
+instance Arbitrary Direction where
   arbitrary = do
     b <- arbitrary
     return $
       if b
-        then UpKey
-        else DownKey
+        then Up
+        else Down
 
-keyToCode :: String -> String -> Key -> String
-keyToCode upCode _ UpKey     = upCode
-keyToCode _ downCode DownKey = downCode
+keyToCode :: String -> String -> Direction -> String
+keyToCode upCode _ Up     = upCode
+keyToCode _ downCode Down = downCode
 
-prop_KeyListCorrectlyReadsInput :: [Key] -> String -> String -> Property
-prop_KeyListCorrectlyReadsInput keys upCode downCode =
+prop_directionListCorrectlyReadsInput ::
+     [Direction] -> String -> String -> Property
+prop_directionListCorrectlyReadsInput keys upCode downCode =
   let input = concat $ keyToCode upCode downCode <$> keys
    in not (null upCode) && not ('\n' `elem` upCode) && not (null downCode) &&
       not ('\n' `elem` downCode) &&
       upCode /=
       downCode ==>
-      keyList upCode downCode input ==
+      directionList upCode downCode input ==
       keys
 
 newtype MenuAtTop a =
   MenuAtTop (Menu a)
-  deriving (Eq, Ord)
+  deriving (Eq)
 
 instance Show a => Show (MenuAtTop a) where
   show (MenuAtTop menu) = show menu
@@ -72,7 +74,7 @@ instance Arbitrary a => Arbitrary (MenuAtTop a) where
 
 newtype MenuAtBottom a =
   MenuAtBottom (Menu a)
-  deriving (Eq, Ord)
+  deriving (Eq)
 
 instance Show a => Show (MenuAtBottom a) where
   show (MenuAtBottom menu) = show menu
@@ -85,13 +87,13 @@ instance Arbitrary a => Arbitrary (MenuAtBottom a) where
 
 prop_UpWhenAtTopOfMenu :: MenuAtTop String -> Int -> Bool
 prop_UpWhenAtTopOfMenu (MenuAtTop menu) n =
-  let keys = replicate n UpKey
-   in menuList menu keys == replicate n menu
+  let keys = replicate n Up
+   in menuList menu keys == menu : replicate n menu
 
 prop_UpWhenAtBottomOfMenu :: MenuAtBottom String -> Int -> Bool
 prop_UpWhenAtBottomOfMenu (MenuAtBottom menu) n =
-  let keys = replicate n DownKey
-   in menuList menu keys == replicate n menu
+  let keys = replicate n Down
+   in menuList menu keys == menu : replicate n menu
 
 main :: IO ()
 main = do
@@ -103,8 +105,8 @@ main = do
         testGroup
           "Property tests"
           [ testProperty
-              "keyList correctly reads input"
-              prop_KeyListCorrectlyReadsInput
+              "directionList correctly reads input"
+              prop_directionListCorrectlyReadsInput
           , testProperty
               "nothing happens when going up when at top of menu"
               prop_UpWhenAtTopOfMenu

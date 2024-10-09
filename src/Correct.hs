@@ -2,11 +2,12 @@
 --   runs a corrected command
 module Correct
   ( correct
+  , CorrectArgs(..)
   ) where
 
 import           Request                   (request, suggestions)
 import           TUI                       (Menu (selected), hInteractWithMenu,
-                                            mkMaybeMenu)
+                                            makeMenu)
 
 import           Control.Applicative       ((<|>))
 import           Control.Applicative.Logic (convert)
@@ -28,28 +29,44 @@ import           System.Environment        (lookupEnv)
 import           System.IO                 (Handle, hFlush, hPutStr, hPutStrLn,
                                             stderr, stdin)
 
-correct :: String -> String -> Double -> IO ()
-correct cmd apiKeyVarName temp = do
-  choices <- sendRequest cmd apiKeyVarName temp
+-- | Arguments needed by the 'correct' function
+data CorrectArgs =
+  CorrectArgs
+    { command       :: String
+    , apiKeyVarName :: String
+    , temperature   :: Double
+    }
+  deriving (Eq, Show)
+
+correct :: CorrectArgs -> IO ()
+correct args = do
+  choices <- sendRequest args
   choice <- hGetUserChoice stdin stderr choices
   putStrLn $ choice
 
 -- | Send request to OpenAI and parse the response as a list of commands
-sendRequest :: String -> String -> Double -> IO [String]
-sendRequest cmd apiKeyVarName temp = do
+sendRequest :: CorrectArgs -> IO [String]
+sendRequest args = do
   apiKey <-
-    (lookupEnv apiKeyVarName >>= convert) <|>
-    fail ("No environment variable " ++ apiKeyVarName ++ ".")
+    (lookupEnv (apiKeyVarName args) >>= convert) <|>
+    fail ("No environment variable " ++ apiKeyVarName args ++ ".")
   aliases <- (lookupEnv "TS_SHELL_ALIASES" >>= (return . fromMaybe ""))
   prevCmds <- (lookupEnv "TS_HISTORY" >>= (return . fromMaybe ""))
-  suggestions <$> responseBody <$>
+  ((suggestions <$> responseBody <$>
     (runReq defaultHttpConfig $
-     request cmd aliases prevCmds (ByteString.pack apiKey) temp)
+     request
+       (command args)
+       aliases
+       prevCmds
+       (ByteString.pack apiKey)
+       (temperature args))) >>=
+   convert) <|>
+    fail "No suggestions."
 
 -- | Interact with user and return selected command or abort on user interruption
 hGetUserChoice :: Handle -> Handle -> [String] -> IO String
 hGetUserChoice hdlIn hdlOut choices = do
-  menu <- convert (mkMaybeMenu $ choices) <|> fail "No suggestions."
+  menu <- makeMenu choices <|> fail "No suggestions."
   term <- setupTermFromEnv
   keypadOnCode <-
     convert (getCapability term keypadOn) <|>

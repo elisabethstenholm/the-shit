@@ -2,8 +2,8 @@ module Main
   ( main
   ) where
 
-import           Alias               (alias)
-import           Correct             (correct)
+import           Alias               (AliasArgs (AliasArgs), alias)
+import           Correct             (CorrectArgs (CorrectArgs), correct)
 
 import           Options.Applicative (CommandFields, Mod, Parser, ParserInfo,
                                       auto, command, customExecParser, help,
@@ -17,21 +17,22 @@ main :: IO ()
 main = do
   mode <- customExecParser (prefs (showHelpOnError <> showHelpOnEmpty)) opts
   case mode of
-    CorrectMode cmd apiKeyVarName temp     -> correct cmd apiKeyVarName temp
-    AliasMode apiKeyVarName aliasName temp -> alias apiKeyVarName aliasName temp
+    CorrectMode args -> correct args
+    AliasMode args   -> alias args
 
 -- | Program mode
 data Mode
-  = CorrectMode String String Double -- ^Correct console command. Arguments: command, api key variable, temperature
-  | AliasMode String String Double -- ^Construct alias. Arguments: api key variable, alias, temperature
-  deriving (Eq, Ord, Show)
+  = CorrectMode CorrectArgs -- ^Correct console command
+  | AliasMode AliasArgs -- ^Construct alias
+  deriving (Eq, Show)
 
 parseCorrectMode :: Mod CommandFields Mode
 parseCorrectMode =
   command
     "correct"
     (info
-       ((CorrectMode <$> parseCommand <*> parseApiKey <*> parseTemperature) <**>
+       ((CorrectMode <$>
+         (CorrectArgs <$> parseCommand <*> parseApiKey <*> parseTemperature)) <**>
         helper)
        mempty)
 
@@ -40,7 +41,8 @@ parseAliasMode =
   command
     "alias"
     (info
-       ((AliasMode <$> parseApiKey <*> parseAliasName <*> parseTemperature) <**>
+       ((AliasMode <$>
+         (AliasArgs <$> parseApiKey <*> parseAliasName <*> parseTemperature)) <**>
         helper)
        mempty)
 

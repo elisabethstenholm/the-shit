@@ -30,6 +30,7 @@ library
       Request
       Shell
       TUI
+      Utils
   other-modules:
       Paths_the_shit
   hs-source-dirs:
@@ -49,13 +50,11 @@ library
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
-    , safe >=0.3.21
     , tasty >=1.4.3
     , tasty-hspec >=1.2.0.4
     , tasty-quickcheck >=0.10.2
     , terminfo >=0.4.1.6
     , text >=2.0.2
-    , text-format >=0.3.2.1
     , unix >=2.8.4.0
   default-language: Haskell2010
 
@@ -80,13 +79,11 @@ executable the-shit
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
-    , safe >=0.3.21
     , tasty >=1.4.3
     , tasty-hspec >=1.2.0.4
     , tasty-quickcheck >=0.10.2
     , terminfo >=0.4.1.6
     , text >=2.0.2
-    , text-format >=0.3.2.1
     , the-shit
     , unix >=2.8.4.0
   default-language: Haskell2010
@@ -114,13 +111,11 @@ test-suite the-shit-test
     , optparse-applicative >=0.18.1.0
     , process >=1.6.19.0
     , req >=3.13.2
-    , safe >=0.3.21
     , tasty >=1.4.3
     , tasty-hspec >=1.2.0.4
     , tasty-quickcheck >=0.10.2
     , terminfo >=0.4.1.6
     , text >=2.0.2
-    , text-format >=0.3.2.1
     , the-shit
     , unix >=2.8.4.0
   default-language: Haskell2010

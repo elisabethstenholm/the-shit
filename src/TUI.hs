@@ -1,17 +1,18 @@
 -- | Module containing the terminal user interface (TUI)
 module TUI
   ( Menu(..)
-  , Key(..)
-  , mkMaybeMenu
+  , Direction(..)
+  , makeMenu
   , hInteractWithMenu
-  , keyList
+  , directionList
   , menuList
   ) where
 
+import           Utils               (uncons)
+
+import           Control.Applicative (Alternative)
 import           Control.Monad       (when)
 import           Data.List           (isPrefixOf)
-import           Data.Maybe          (fromMaybe)
-import           Safe                (lastMay)
 import           System.Console.ANSI (Color (Green, Red),
                                       ColorIntensity (Vivid),
                                       ConsoleLayer (Foreground),
@@ -30,22 +31,21 @@ data Menu a =
     , selected :: a -- ^Selected item
     , below    :: [a] -- ^Items below selected item
     }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Show)
 
 -- | Make 'Menu' from list with first item as selected
-mkMaybeMenu :: [a] -> Maybe (Menu a)
-mkMaybeMenu []     = Nothing
-mkMaybeMenu (x:xs) = Just $ Menu {over = [], selected = x, below = xs}
+makeMenu :: (Alternative f) => [a] -> f (Menu a)
+makeMenu = fmap (uncurry $ Menu []) . uncons
 
 -- | Length of a menu
 menuLength :: Menu a -> Int
 menuLength menu = length (over menu) + length (below menu) + 1
 
--- | Up or down key on keyboard
-data Key
-  = UpKey
-  | DownKey
-  deriving (Eq, Ord, Show)
+-- | Direction for movement in menu (up or down)
+data Direction
+  = Up
+  | Down
+  deriving (Eq, Show)
 
 -- | Move up in menu if possible
 moveUp :: Menu a -> Menu a
@@ -60,27 +60,24 @@ moveDown (Menu {over = xs, selected = x, below = (y:ys)}) =
   Menu {over = xs ++ [x], selected = y, below = ys}
 
 -- | Move according to key
-move :: Key -> Menu a -> Menu a
-move UpKey   = moveUp
-move DownKey = moveDown
+move :: Direction -> Menu a -> Menu a
+move Up   = moveUp
+move Down = moveDown
 
 -- | Read list of keys from input string
-keyList :: String -> String -> String -> [Key]
-keyList _ _ "" = []
-keyList upCode downCode input
+directionList :: String -> String -> String -> [Direction]
+directionList _ _ "" = []
+directionList upCode downCode input
   | "\n" `isPrefixOf` input = []
   | upCode `isPrefixOf` input =
-    UpKey : keyList upCode downCode (drop (length upCode) input)
+    Up : directionList upCode downCode (drop (length upCode) input)
   | downCode `isPrefixOf` input =
-    DownKey : keyList upCode downCode (drop (length downCode) input)
-  | otherwise = keyList upCode downCode (tail input)
+    Down : directionList upCode downCode (drop (length downCode) input)
+  | otherwise = directionList upCode downCode (tail input)
 
 -- | Apply moves to menu according to key list
-menuList :: Menu a -> [Key] -> [Menu a]
-menuList _ [] = []
-menuList menu (k:ks) =
-  let newMenu = move k menu
-   in newMenu : menuList newMenu ks
+menuList :: Menu a -> [Direction] -> [Menu a]
+menuList = scanl (flip move)
 
 -- | User interaction with a menu, returning the last state
 hInteractWithMenu ::
@@ -97,14 +94,14 @@ hInteractWithMenu hdlIn hdlOut hdlOutSupportsANSI upCode downCode menu = do
   hPrintMenu hdlOut hdlOutSupportsANSI menu
   hSetBuffering hdlIn NoBuffering
   input <- hGetContents hdlIn
-  let menus = menuList menu (keyList upCode downCode input)
+  let menus = menuList menu (directionList upCode downCode input)
   let n = menuLength menu
   sequence_ $
     ((hCursorUpLine hdlOut n >> hClearFromCursorToScreenEnd hdlOut >>) .
      hPrintMenu hdlOut hdlOutSupportsANSI) <$>
     menus
   hShowCursor hdlOut
-  return $ fromMaybe menu $ lastMay menus
+  return $ last menus -- last is safe here since menus is built using scanl which produces a non-empty list
 
 -- | Print menu to given handle
 hPrintMenu :: Handle -> Bool -> Menu String -> IO ()
